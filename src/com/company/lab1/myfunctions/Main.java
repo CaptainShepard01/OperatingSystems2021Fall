@@ -3,11 +3,12 @@ package com.company.lab1.myfunctions;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
-import java.util.Scanner;
+import java.util.Optional;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
+
         Pipe fPipeArgs = Pipe.open();
         Pipe.SinkChannel fArgsSkCh = fPipeArgs.sink();
         Pipe.SourceChannel fArgsSrcCh = fPipeArgs.source();
@@ -27,7 +28,7 @@ public class Main {
         Thread fThread = new Thread(new FunctionF(fArgsSrcCh, fResSkCh));
         Thread gThread = new Thread(new FunctionG(gArgsSrcCh, gResSkCh));
 
-        int x = 5;
+        int x = 0;
         /*System.out.print("Enter x: ");
         Scanner keyboard = new Scanner(System.in);
         x = keyboard.nextInt();*/
@@ -43,27 +44,62 @@ public class Main {
         fThread.start();
         gThread.start();
 
-        int fRes = -1, gRes = -1;
+        Optional<Double> fRes, gRes;
 
-        ByteBuffer fResBuf = ByteBuffer.allocate(4);
-        fResBuf.clear();
-        ByteBuffer gResBuf = ByteBuffer.allocate(4);
-        gResBuf.clear();
+        ByteBuffer fResBuf;
+        ByteBuffer gResBuf;
+        ByteBuffer sizeBuf = ByteBuffer.allocate(4);
+        sizeBuf.clear();
 
         boolean readFromF = false;
         boolean readFromG = false;
         while (true) {
             if (!readFromF) {
-                if (fResSrcCh.read(fResBuf) > 0) {
+                if (fResSrcCh.read(sizeBuf) > 0) {
+                    sizeBuf.flip();
+                    int size = sizeBuf.getInt();
+
+                    fResBuf = ByteBuffer.allocate(size);
+                    fResBuf.clear();
+                    fResSrcCh.read(fResBuf);
                     fResBuf.flip();
-                    fRes = fResBuf.getInt();
+
+                    if(size == 8){
+                        System.out.println(fResBuf.getDouble());
+                    }
+                    else {
+                        String result = "";
+                        while(fResBuf.hasRemaining()){
+                            result += (char)fResBuf.get();
+                        }
+                        System.out.println(result);
+                    }
+
                     readFromF = true;
+                    sizeBuf.clear();
                 }
             }
             if (!readFromG) {
-                if (gResSrcCh.read(gResBuf) > 0) {
-                    gResBuf.flip();
-                    gRes = gResBuf.getInt();
+                if (gResSrcCh.read(sizeBuf) > 0) {
+                    sizeBuf.flip();
+                    int size = sizeBuf.getInt();
+
+                    gResBuf = ByteBuffer.allocate(size);
+                    gResBuf.clear();
+                        gResSrcCh.read(gResBuf);
+                        gResBuf.flip();
+
+                    if(size == 8){
+                        System.out.println(gResBuf.getDouble());
+                    }
+                    else {
+                        String result = "";
+                        while (gResBuf.hasRemaining()){
+                            result += (char)gResBuf.get();
+                        }
+                        System.out.println(result);
+                    }
+
                     readFromG = true;
                 }
             }
@@ -71,6 +107,12 @@ public class Main {
                 break;
             }
         }
-        System.out.printf("Result of %d^2 + 7*%d = %d%n", x, x, fRes + gRes);
+        System.out.printf("Result of f(%d) * g(%d) = %d%n", x, x, 5 * 5);
+        try {
+            fThread.join();
+            gThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
