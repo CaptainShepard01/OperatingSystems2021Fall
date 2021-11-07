@@ -52,7 +52,7 @@ public class SchedulingAlgorithm {
                             continue;
                         }
                         sProcess process = (sProcess) (vector.get(index));
-                        out.println("User: " + j + " Process: " + index + " registered... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + " " + process.ionext + ")");
+                        printProcessInfo(out, j, index, process, "registered... (");
 
                         while (true) {
                             if (comptime >= runtime) {
@@ -66,7 +66,7 @@ public class SchedulingAlgorithm {
                                     proportions.set(j, 0);
                                 }
                                 completed++;
-                                out.println("User: " + j + " Process: " + index + " completed... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + " " + process.ionext + ")");
+                                printProcessInfo(out, j, index, process, "completed... (");
                                 if (completed == size) {
                                     result.compuTime = comptime;
                                     out.close();
@@ -75,7 +75,7 @@ public class SchedulingAlgorithm {
                                 break;
                             }
                             if (process.ioblocking == process.ionext) {
-                                out.println("User: " + j + " Process: " + index + " I/O blocked... (" + process.cputime + " " + process.ioblocking + " " + process.cpudone + " " + process.ionext + ")");
+                                printProcessInfo(out, j, index, process, "I/O blocked... (");
                                 process.numblocked++;
                                 process.ionext = 0;
                                 break;
@@ -98,5 +98,9 @@ public class SchedulingAlgorithm {
         }
         result.compuTime = comptime;
         return result;
+    }
+
+    private static void printProcessInfo(PrintStream out, int j, int index, sProcess process, String info) {
+        out.println("User: " + j + " Process: " + index + " " + info + process.cputime + " " + process.ioblocking + " " + process.cpudone + " " + process.ionext + ")");
     }
 }

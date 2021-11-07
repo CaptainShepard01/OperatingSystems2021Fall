@@ -53,7 +53,10 @@ public class Scheduling {
                 if (line.startsWith("numprocess")) {
                     StringTokenizer st = new StringTokenizer(line);
                     st.nextToken();
-                    numProcesses.add(Common.s2i(st.nextToken()));
+
+                    for (int i = 0; i < usernum; ++i) {
+                        numProcesses.add(Common.s2i(st.nextToken()));
+                    }
                 }
                 if (line.startsWith("meandev")) {
                     StringTokenizer st = new StringTokenizer(line);
