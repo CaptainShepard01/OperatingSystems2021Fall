@@ -157,16 +157,23 @@ public class Scheduling {
             out.println("Simulation Run Time: " + result.compuTime);
             out.println("Mean: " + meanDev);
             out.println("Standard Deviation: " + standardDev);
-            out.println("Process #\tCPU Time\tIO Blocking\tCPU Completed\tCPU Blocked");
+            out.println("User #\tProcess #\tCPU Time\tIO Blocking\tCPU Completed\tCPU Blocked");
             for (i = 0; i < userVector.size(); i++) {
                 Vector processVector = (Vector) userVector.elementAt(i);
-                out.print(Integer.toString(i));
-                if (i < 100) {
-                    out.print("\t\t");
-                } else {
-                    out.print("\t");
-                }
+
                 for (int j = 0; j < processVector.size(); j++) {
+                    out.print(Integer.toString(i));
+                    if (i < 100) {
+                        out.print("\t\t");
+                    } else {
+                        out.print("\t");
+                    }
+                    out.print(Integer.toString(j));
+                    if (j < 100) {
+                        out.print("\t\t\t");
+                    } else {
+                        out.print("\t\t");
+                    }
                     sProcess process = (sProcess) processVector.get(j);
                     out.print(Integer.toString(process.cputime));
                     if (process.cputime < 100) {
@@ -182,9 +189,9 @@ public class Scheduling {
                     }
                     out.print(Integer.toString(process.cpudone));
                     if (process.cpudone < 100) {
-                        out.print(" (ms)\t\t");
+                        out.print(" (ms)\t\t\t");
                     } else {
-                        out.print(" (ms)\t");
+                        out.print(" (ms)\t\t");
                     }
                     out.println(process.numblocked + " times");
                 }
