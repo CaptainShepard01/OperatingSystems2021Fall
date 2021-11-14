@@ -11,7 +11,7 @@ import java.util.Vector;
 
 public class SchedulingAlgorithm {
 
-    public static Results Run(int runtime, Vector userVector, Results result, Vector proportions) {
+    public static Results Run(int runtime, Vector userVector, Results result, Vector proportions, int quantum) {
         int comptime = 0;
         int size = 0;
         int completed = 0;
@@ -72,6 +72,12 @@ public class SchedulingAlgorithm {
                                     out.close();
                                     return result;
                                 }
+                                break;
+                            }
+                            if(process.ionext == quantum){
+                                printProcessInfo(out, j, index, process, "quantum ended");
+                                process.numblocked++;
+                                process.ionext = 0;
                                 break;
                             }
                             if (process.ioblocking == process.ionext) {

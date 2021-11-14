@@ -19,6 +19,7 @@ public class Scheduling {
     private static int meanDev = 1000;
     private static int standardDev = 100;
     private static int runtime = 1000;
+    private static int quantum = 500;
     private static Vector proportions = new Vector();
     private static Vector userVector = new Vector();
     private static Results result = new Results("null", "null", 0);
@@ -87,6 +88,11 @@ public class Scheduling {
                     st.nextToken();
                     runtime = Common.s2i(st.nextToken());
                 }
+                if (line.startsWith("quantum")) {
+                    StringTokenizer st = new StringTokenizer(line);
+                    st.nextToken();
+                    quantum = Common.s2i(st.nextToken());
+                }
             }
             for (int i = 0, k = 0; i < usernum; i++) {
                 Vector vector = new Vector();
@@ -148,7 +154,7 @@ public class Scheduling {
                 i++;
             }
         }
-        result = SchedulingAlgorithm.Run(runtime, userVector, result, proportions);
+        result = SchedulingAlgorithm.Run(runtime, userVector, result, proportions, quantum);
         try {
             //BufferedWriter out = new BufferedWriter(new FileWriter(resultsFile));
             PrintStream out = new PrintStream(new FileOutputStream(resultsFile));
