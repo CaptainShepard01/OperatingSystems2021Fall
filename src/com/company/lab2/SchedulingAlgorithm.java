@@ -74,16 +74,17 @@ public class SchedulingAlgorithm {
                                 }
                                 break;
                             }
-                            if(process.ionext == quantum){
+                            if(process.ionext == process.currentQuantum){
                                 printProcessInfo(out, j, index, process, "quantum ended");
                                 process.numblocked++;
-                                process.ionext = 0;
+                                process.currentQuantum += quantum;
                                 break;
                             }
                             if (process.ioblocking == process.ionext) {
                                 printProcessInfo(out, j, index, process, "I/O blocked");
                                 process.numblocked++;
                                 process.ionext = 0;
+                                process.currentQuantum = quantum;
                                 break;
                             }
 

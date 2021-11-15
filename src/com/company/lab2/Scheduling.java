@@ -98,6 +98,7 @@ public class Scheduling {
                 Vector vector = new Vector();
                 for (int j = 0; j < (int) numProcesses.get(i); j++, k++) {
                     sProcess process = (sProcess) processVector.get(k);
+                    process.currentQuantum = quantum;
                     vector.add(process);
                 }
                 userVector.add(vector);
@@ -163,6 +164,7 @@ public class Scheduling {
             out.println("Simulation Run Time: " + result.compuTime);
             out.println("Mean: " + meanDev);
             out.println("Standard Deviation: " + standardDev);
+            out.println("Quantum size: " + quantum);
             out.println("User #\tProcess #\tCPU Time\tIO Blocking\tCPU Completed\tCPU Blocked");
             for (i = 0; i < userVector.size(); i++) {
                 Vector processVector = (Vector) userVector.elementAt(i);

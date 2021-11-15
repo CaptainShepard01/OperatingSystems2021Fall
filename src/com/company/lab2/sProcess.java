@@ -6,6 +6,7 @@ public class sProcess {
     public int cpudone;
     public int ionext;
     public int numblocked;
+    public int currentQuantum = 0;
 
     public sProcess (int cputime, int ioblocking, int cpudone, int ionext, int numblocked) {
         this.cputime = cputime;
