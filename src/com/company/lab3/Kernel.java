@@ -385,7 +385,7 @@ public class Kernel extends Thread {
         if (instruct.inst.startsWith("READ")) {
             Page page = (Page) memVector.elementAt(numberOfPage);
             if (page.physical == -1) {
-                if (physicalMapped.size() == physicalPageNum) {
+                if (physicalMapped.size() == physicalPageNum + 1) {
                     if (doFileLog) {
                         printLogFile("READ " + Long.toString(instruct.addr, addressradix) + " ... page fault");
                     }
@@ -399,6 +399,7 @@ public class Kernel extends Thread {
                         if (!physicalMapped.contains(k)) {
                             page.physical = k;
                             physicalMapped.add(k);
+                            controlPanel.addPhysicalPage(k, page.id);
                             break;
                         }
                     }
@@ -429,7 +430,7 @@ public class Kernel extends Thread {
         if (instruct.inst.startsWith("WRITE")) {
             Page page = (Page) memVector.elementAt(numberOfPage);
             if (page.physical == -1) {
-                if (physicalMapped.size() == physicalPageNum) {
+                if (physicalMapped.size() == physicalPageNum + 1) {
                     if (doFileLog) {
                         printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) + " ... page fault");
                     }
@@ -443,6 +444,7 @@ public class Kernel extends Thread {
                         if (!physicalMapped.contains(k)) {
                             page.physical = k;
                             physicalMapped.add(k);
+                            controlPanel.addPhysicalPage(k, page.id);
                             break;
                         }
                     }
