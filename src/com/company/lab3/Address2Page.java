@@ -1,6 +1,6 @@
 package com.company.lab3;
 
-public class Virtual2Physical {
+public class Address2Page {
     public static int pageNum(long memaddr, int numpages, long block) {
         int i = 0;
         long high = 0;

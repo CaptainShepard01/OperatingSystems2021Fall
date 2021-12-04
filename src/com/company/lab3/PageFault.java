@@ -80,7 +80,7 @@ public class PageFault {
         pageUsage.set(LRUPage, Integer.parseInt("0".repeat(numberOfTicks)));
         newPage.physical = page.physical;
         controlPanel.removePhysicalPage(LRUPage);
-        controlPanel.addPhysicalPage(newPage.physical, newPageNum);
+        controlPanel.addPhysicalPage(newPageNum, newPage.physical);
         page.inMemTime = 0;
         page.lastTouchTime = 0;
         page.R = 0;

@@ -250,7 +250,7 @@ public class ControlPanel extends Frame {
         statusValueLabel.setText(status);
     }
 
-    public void addPhysicalPage(int physicalPage, int pageNum) {
+    public void addPhysicalPage(int pageNum, int physicalPage) {
         if (pageNum >= 64) {
             return;
         }
