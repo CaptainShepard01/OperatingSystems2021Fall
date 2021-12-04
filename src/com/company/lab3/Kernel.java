@@ -4,30 +4,38 @@ import java.io.*;
 import java.util.*;
 
 public class Kernel extends Thread {
-    // The number of virtual pages must be fixed at 63 due to
+    // The number of virtual pages must be fixed at 64 due to
     // dependencies in the GUI
     private static int virtualPageNumber = 64;
     private static int physicalPageNumber = 32;
 
+    private boolean isAgingAlgorithm;
+
     private String output = null;
+    private int pageFaultCount = 0;
     private static final String lineSeparator =
             System.getProperty("line.separator");
     private String command_file;
     private String config_file;
     private ControlPanel controlPanel;
-    private Vector memVector = new Vector();
-    private Vector instructVector = new Vector();
+    private Vector<Page> memVector = new Vector();
+    private Vector<Instruction> instructVector = new Vector();
     private int numberOfTicks;
-    private Vector pageUsageVector = new Vector();
+    private Vector<Integer> pageUsageVector = new Vector();
     private int pageUsed;
     private Set<Integer> physicalMapped = new HashSet<>();
-    private String status;
     private boolean doStdoutLog = false;
     private boolean doFileLog = false;
     public int runs;
     public int runcycles;   //number of instructions to run
     public long block = (int) Math.pow(2, 12);
     public static byte addressradix = 10;
+
+    private int sleepTime = 500;
+
+    public Kernel(boolean isAgingAlgorithm) {
+        this.isAgingAlgorithm = isAgingAlgorithm;
+    }
 
     public void init(String commands, String config) {
         File f;
@@ -86,6 +94,13 @@ public class Kernel extends Thread {
                             st.nextToken();
                             numberOfTicks = Common.s2i(st.nextToken());
                             pageUsed = Integer.parseInt("1" + "0".repeat(numberOfTicks - 1), 2);
+                        }
+                    }
+                    if (line.startsWith("sleeptime")) {
+                        StringTokenizer st = new StringTokenizer(line);
+                        while (st.hasMoreTokens()) {
+                            st.nextToken();
+                            sleepTime = Common.s2i(st.nextToken());
                         }
                     }
                 }
@@ -354,15 +369,16 @@ public class Kernel extends Thread {
         step();
         while (runs != runcycles) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 System.out.println("Error    >>" + e.getMessage());
             }
             step();
         }
+        printLogFile("\nNumber of page faults: " + pageFaultCount);
     }
 
-    private void logInstruction(Instruction instruction, String status){
+    private void logInstruction(Instruction instruction, String status) {
         if (instruction.inst.startsWith("READ")) {
             log(instruction, "READ", status);
         } else if (instruction.inst.startsWith("WRITE")) {
@@ -397,10 +413,9 @@ public class Kernel extends Thread {
 
         if (page.physical == -1) {
             if (physicalMapped.size() == physicalPageNumber) {
-                PageFault.replacePage(memVector, pageUsageVector, numberOfTicks, numberOfPage, controlPanel);
+                replacePage(page.id);
                 controlPanel.pageFaultValueLabel.setText("YES");
 
-                logInstruction(instruct, "page fault");
             } else {
                 for (int k = 0; k < physicalPageNumber; ++k) {
                     if (!physicalMapped.contains(k)) {
@@ -410,10 +425,9 @@ public class Kernel extends Thread {
                         break;
                     }
                 }
-
-                logInstruction(instruct, "okay");
             }
-
+            logInstruction(instruct, "page fault");
+            pageFaultCount++;
         } else {
             page.lastTouchTime = 0;
 
@@ -440,6 +454,13 @@ public class Kernel extends Thread {
 
         controlPanel.timeValueLabel.setText(runs * 10 + " (ns)");
         runs++;
+    }
+
+    private void replacePage(int numberOfPage) {
+        if (isAgingAlgorithm)
+            PageFaultAging.replacePage(memVector, pageUsageVector, numberOfTicks, numberOfPage, controlPanel);
+        else
+            PageFaultFIFO.replacePage(memVector, virtualPageNumber, numberOfPage, controlPanel);
     }
 
     public void reset() {

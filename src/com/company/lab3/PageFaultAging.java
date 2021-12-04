@@ -1,16 +1,16 @@
 /* It is in this file, specifically the replacePage function that will
    be called by MemoryManagement when there is a page fault.  The 
-   users of this program should rewrite PageFault to implement the 
+   users of this program should rewrite PageFaultAging to implement the
    page replacement algorithm.
 */
 
-// This PageFault file is an example of the FIFO Page Replacement
+// This PageFaultAging file is an example of the FIFO Page Replacement
 // Algorithm as described in the Memory Management section.
 package com.company.lab3;
 
 import java.util.Vector;
 
-public class PageFault {
+public class PageFaultAging {
 
     /**
      * The page replacement algorithm for the memory management simulator.

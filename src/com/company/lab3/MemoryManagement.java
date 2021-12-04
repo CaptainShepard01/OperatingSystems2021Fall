@@ -4,12 +4,11 @@ package com.company.lab3;
 import java.io.File;
 
 public class MemoryManagement {
+    private static Kernel kernel;
+    private static ControlPanel controlPanel;
     public static void main(String[] args) {
-        ControlPanel controlPanel;
-        Kernel kernel;
-
-        if (args.length < 1 || args.length > 2) {
-            System.out.println("Usage: 'java MemoryManagement <COMMAND FILE> <PROPERTIES FILE>'");
+        if (args.length < 1 || args.length > 3) {
+            System.out.println("Usage: 'java MemoryManagement <COMMAND FILE> <PROPERTIES FILE> <IS AGING ALGORITHM>'");
             System.exit(-1);
         }
 
@@ -37,12 +36,17 @@ public class MemoryManagement {
             }
         }
 
-        kernel = new Kernel();
+        kernel = new Kernel(Boolean.parseBoolean(args[2]));
         controlPanel = new ControlPanel("Memory Management");
         if (args.length == 1) {
             controlPanel.init(kernel, args[0], null);
         } else {
             controlPanel.init(kernel, args[0], args[1]);
         }
+    }
+
+    public static void runSimulation(){
+        kernel.run();
+        controlPanel.dispose();
     }
 }
