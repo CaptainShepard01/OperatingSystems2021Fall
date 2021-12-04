@@ -1,10 +1,7 @@
 package com.company.lab3;
 
 import java.io.*;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
 
 public class Kernel extends Thread {
     // The number of virtual pages must be fixed at 63 due to
@@ -329,14 +326,14 @@ public class Kernel extends Thread {
 
     private void printLogFile(String message) {
         String line;
-        String temp = "";
+        StringBuilder temp = new StringBuilder();
 
         File trace = new File(output);
         if (trace.exists()) {
             try {
                 DataInputStream in = new DataInputStream(new FileInputStream(output));
                 while ((line = in.readLine()) != null) {
-                    temp += line + lineSeparator;
+                    temp.append(line).append(lineSeparator);
                 }
                 in.close();
             } catch (IOException e) {
@@ -388,19 +385,19 @@ public class Kernel extends Thread {
         controlPanel.addressValueLabel.setText(Long.toString(instruct.addr, addressradix));
         int numberOfPage = Address2Page.pageNum(instruct.addr, virtualPageNumber, block);
         getPage(numberOfPage);
-        if (controlPanel.pageFaultValueLabel.getText() == "YES") {
+        if (Objects.equals(controlPanel.pageFaultValueLabel.getText(), "YES")) {
             controlPanel.pageFaultValueLabel.setText("NO");
         }
 
         Integer previousUsage = (Integer) pageUsageVector.get(numberOfPage);
-        Integer currentUsage = previousUsage >> 1;
+        int currentUsage = previousUsage >> 1;
         String instructionString = instruct.inst;
 
         Page page = (Page) memVector.elementAt(numberOfPage);
 
         if (page.physical == -1) {
             if (physicalMapped.size() == physicalPageNumber) {
-                PageFault.replacePage(memVector, pageUsageVector, numberOfTicks, virtualPageNumber, numberOfPage, controlPanel);
+                PageFault.replacePage(memVector, pageUsageVector, numberOfTicks, numberOfPage, controlPanel);
                 controlPanel.pageFaultValueLabel.setText("YES");
 
                 logInstruction(instruct, "page fault");

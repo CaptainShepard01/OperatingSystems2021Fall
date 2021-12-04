@@ -45,14 +45,13 @@ public class PageFault {
      *                       proper page to remove, and modified to reflect any changes.
      * @param pageUsage      is the vector which contains the last numberOfTicks bits of virtual pages usage
      * @param numberOfTicks  is how many bits of virtual pages usage we store
-     * @param virtualPageNum is the number of virtual pages in the
      *                       simulator (set in Kernel.java).
      * @param newPageNum     is the requested page which caused the
      *                       page fault.
      * @param controlPanel   represents the graphical element of the
      *                       simulator, and allows one to modify the current display.
      */
-    public static void replacePage(Vector mem, Vector pageUsage, int numberOfTicks, int virtualPageNum, int newPageNum, ControlPanel controlPanel) {
+    public static void replacePage(Vector mem, Vector pageUsage, int numberOfTicks, int newPageNum, ControlPanel controlPanel) {
         int LRUPage = -1;
         int leastUsage = Integer.parseInt("1".repeat(numberOfTicks));
 
