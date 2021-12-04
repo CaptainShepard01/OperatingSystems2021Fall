@@ -1,14 +1,16 @@
 package com.company.lab3;
 
 import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-//TODO implement set to store all mapped physical pages
 public class Kernel extends Thread {
     // The number of virtual pages must be fixed at 63 due to
     // dependencies in the GUI
     private static int virtPageNum = 63;
+    private static int physicalPageNum = 32;
 
     private String output = null;
     private static final String lineSeparator =
@@ -21,6 +23,7 @@ public class Kernel extends Thread {
     private int numberOfTicks;
     private Vector pageUsageVector = new Vector();
     private int pageUsed;
+    private Set<Integer> physicalMapped = new HashSet<>();
     private String status;
     private boolean doStdoutLog = false;
     private boolean doFileLog = false;
@@ -69,13 +72,17 @@ public class Kernel extends Thread {
                             address_limit = (block * virtPageNum + 1) - 1;
                         }
                     }
-                }
-                in.close();
-            } catch (IOException e) { /* Handle exceptions */ }
-
-            try {
-                DataInputStream in = new DataInputStream(new FileInputStream(f));
-                while ((line = in.readLine()) != null) {
+                    if (line.startsWith("numphysical")) {
+                        StringTokenizer st = new StringTokenizer(line);
+                        while (st.hasMoreTokens()) {
+                            tmp = st.nextToken();
+                            physicalPageNum = Common.s2i(st.nextToken()) - 1;
+                            if (physicalPageNum < 2 || physicalPageNum > 63) {
+                                System.out.println("MemoryManagement: numphysical out of bounds.");
+                                System.exit(-1);
+                            }
+                        }
+                    }
                     if (line.startsWith("numticks")) {
                         StringTokenizer st = new StringTokenizer(line);
                         while (st.hasMoreTokens()) {
@@ -116,7 +123,7 @@ public class Kernel extends Thread {
                             } else {
                                 physical = Common.s2i(tmp);
                             }
-                            if ((0 > id || id > virtPageNum) || (-1 > physical || physical > ((virtPageNum - 1) / 2))) {
+                            if ((0 > id || id > virtPageNum) || (-1 > physical || physical > physicalPageNum)) {
                                 System.out.println("MemoryManagement: Invalid page value in " + config);
                                 System.exit(-1);
                             }
@@ -265,6 +272,7 @@ public class Kernel extends Thread {
             Page page = (Page) memVector.elementAt(i);
             if (page.physical != -1) {
                 map_count++;
+                physicalMapped.add(page.physical);
             }
             for (j = 0; j < virtPageNum; j++) {
                 Page tmp_page = (Page) memVector.elementAt(j);
@@ -278,15 +286,22 @@ public class Kernel extends Thread {
             }
             physical_count = 0;
         }
-        if (map_count < (virtPageNum + 1) / 2) {
+        //not sure if it is a great practice to map virtual pages in count of physical from the start
+        /*if (map_count < physicalPageNum) {
             for (i = 0; i < virtPageNum; i++) {
                 Page page = (Page) memVector.elementAt(i);
-                if (page.physical == -1 && map_count < (virtPageNum + 1) / 2) {
-                    page.physical = i;
-                    map_count++;
+                if (page.physical == -1 && map_count < physicalPageNum) {
+                    for(int k = 0;k<(virtPageNum+1)/2;++k){
+                        if(!physicalMapped.contains(k)){
+                            page.physical = k;
+                            physicalMapped.add(k);
+                            map_count++;
+                            break;
+                        }
+                    }
                 }
             }
-        }
+        }*/
         for (i = 0; i < virtPageNum; i++) {
             Page page = (Page) memVector.elementAt(i);
             if (page.physical == -1) {
@@ -365,19 +380,37 @@ public class Kernel extends Thread {
         }
 
         Integer previousUsage = (Integer) pageUsageVector.get(numberOfPage);
-        Integer currentUsage = previousUsage>>1;
+        Integer currentUsage = previousUsage >> 1;
 
         if (instruct.inst.startsWith("READ")) {
             Page page = (Page) memVector.elementAt(numberOfPage);
             if (page.physical == -1) {
-                if (doFileLog) {
-                    printLogFile("READ " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                if (physicalMapped.size() == physicalPageNum) {
+                    if (doFileLog) {
+                        printLogFile("READ " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    }
+                    if (doStdoutLog) {
+                        System.out.println("READ " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    }
+                    PageFault.replacePage(memVector, pageUsageVector, numberOfTicks, virtPageNum, numberOfPage, controlPanel);
+                    controlPanel.pageFaultValueLabel.setText("YES");
+                } else {
+                    for (int k = 0; k < physicalPageNum; ++k) {
+                        if (!physicalMapped.contains(k)) {
+                            page.physical = k;
+                            physicalMapped.add(k);
+                            break;
+                        }
+                    }
+
+                    if (doFileLog) {
+                        printLogFile("READ " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    }
+                    if (doStdoutLog) {
+                        System.out.println("READ " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    }
                 }
-                if (doStdoutLog) {
-                    System.out.println("READ " + Long.toString(instruct.addr, addressradix) + " ... page fault");
-                }
-                PageFault.replacePage(memVector, pageUsageVector, numberOfTicks, virtPageNum, numberOfPage, controlPanel);
-                controlPanel.pageFaultValueLabel.setText("YES");
+
             } else {
                 page.R = 1;
                 page.lastTouchTime = 0;
@@ -396,14 +429,31 @@ public class Kernel extends Thread {
         if (instruct.inst.startsWith("WRITE")) {
             Page page = (Page) memVector.elementAt(numberOfPage);
             if (page.physical == -1) {
-                if (doFileLog) {
-                    printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                if (physicalMapped.size() == physicalPageNum) {
+                    if (doFileLog) {
+                        printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    }
+                    if (doStdoutLog) {
+                        System.out.println("WRITE " + Long.toString(instruct.addr, addressradix) + " ... page fault");
+                    }
+                    PageFault.replacePage(memVector, pageUsageVector, numberOfTicks, virtPageNum, numberOfPage, controlPanel);
+                    controlPanel.pageFaultValueLabel.setText("YES");
+                } else {
+                    for (int k = 0; k < physicalPageNum; ++k) {
+                        if (!physicalMapped.contains(k)) {
+                            page.physical = k;
+                            physicalMapped.add(k);
+                            break;
+                        }
+                    }
+
+                    if (doFileLog) {
+                        printLogFile("WRITE " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    }
+                    if (doStdoutLog) {
+                        System.out.println("WRITE " + Long.toString(instruct.addr, addressradix) + " ... okay");
+                    }
                 }
-                if (doStdoutLog) {
-                    System.out.println("WRITE " + Long.toString(instruct.addr, addressradix) + " ... page fault");
-                }
-                PageFault.replacePage(memVector, pageUsageVector, numberOfTicks, virtPageNum, numberOfPage, controlPanel);
-                controlPanel.pageFaultValueLabel.setText("YES");
             } else {
                 page.M = 1;
                 page.lastTouchTime = 0;

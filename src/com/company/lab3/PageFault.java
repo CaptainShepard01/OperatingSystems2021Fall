@@ -40,17 +40,17 @@ public class PageFault {
      * function call.  One must also remember to reset the values of
      * the page which has just been removed from memory.
      *
-     * @param mem              is the vector which contains the contents of the pages
-     *                         in memory being simulated.  mem should be searched to find the
-     *                         proper page to remove, and modified to reflect any changes.
-     * @param pageUsage        is the vector which contains the last numberOfTicks bits of virtual pages usage
-     * @param numberOfTicks    is how many bits of virtual pages usage we store
-     * @param virtualPageNum   is the number of virtual pages in the
-     *                         simulator (set in Kernel.java).
-     * @param newPageNum is the requested page which caused the
-     *                         page fault.
-     * @param controlPanel     represents the graphical element of the
-     *                         simulator, and allows one to modify the current display.
+     * @param mem            is the vector which contains the contents of the pages
+     *                       in memory being simulated.  mem should be searched to find the
+     *                       proper page to remove, and modified to reflect any changes.
+     * @param pageUsage      is the vector which contains the last numberOfTicks bits of virtual pages usage
+     * @param numberOfTicks  is how many bits of virtual pages usage we store
+     * @param virtualPageNum is the number of virtual pages in the
+     *                       simulator (set in Kernel.java).
+     * @param newPageNum     is the requested page which caused the
+     *                       page fault.
+     * @param controlPanel   represents the graphical element of the
+     *                       simulator, and allows one to modify the current display.
      */
     public static void replacePage(Vector mem, Vector pageUsage, int numberOfTicks, int virtualPageNum, int newPageNum, ControlPanel controlPanel) {
         int LRUPage = -1;
@@ -58,13 +58,21 @@ public class PageFault {
 
         for (int i = 0; i < pageUsage.size(); ++i) {
             Page page = (Page) mem.elementAt(i);
-            if(page.physical != -1){
-                int currentLeastUsage = (Integer) pageUsage.get(i);
-                if(currentLeastUsage < leastUsage){
-                    leastUsage = currentLeastUsage;
-                    LRUPage = i;
+            if (page.physical != -1) {
+                if (page.R != 1) {
+                    int currentLeastUsage = (Integer) pageUsage.get(i);
+                    if (currentLeastUsage < leastUsage) {
+                        leastUsage = currentLeastUsage;
+                        LRUPage = i;
+                    }
+                } else {
+                    page.R = 0;
                 }
             }
+        }
+
+        if (LRUPage == -1) {
+            LRUPage = 0;
         }
 
         Page page = (Page) mem.elementAt(LRUPage);
