@@ -6,6 +6,7 @@ import java.io.File;
 public class MemoryManagement {
     private static Kernel kernel;
     private static ControlPanel controlPanel;
+
     public static void main(String[] args) {
         if (args.length < 1 || args.length > 3) {
             System.out.println("Usage: 'java MemoryManagement <COMMAND FILE> <PROPERTIES FILE> <IS AGING ALGORITHM>'");
@@ -38,7 +39,8 @@ public class MemoryManagement {
 
         boolean isAgingAlgorithm = Boolean.parseBoolean(args[2]);
         kernel = new Kernel(isAgingAlgorithm);
-        controlPanel = new ControlPanel(isAgingAlgorithm?"Aging algorithm":"FIFO algorithm");
+        controlPanel = new ControlPanel(isAgingAlgorithm ? "Aging algorithm" : "FIFO algorithm");
+
         if (args.length == 1) {
             controlPanel.init(kernel, args[0], null);
         } else {
@@ -46,7 +48,7 @@ public class MemoryManagement {
         }
     }
 
-    public static void runSimulation(){
+    public static void runSimulation() {
         kernel.run();
         controlPanel.dispose();
     }

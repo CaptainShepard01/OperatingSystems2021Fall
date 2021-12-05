@@ -485,7 +485,7 @@ public class Kernel extends Thread {
             currentTick = 0;
         }
 
-        controlPanel.timeValueLabel.setText(runs * 10 + " (ns)");
+        controlPanel.timeValueLabel.setText(runs * 10 + " (ms)");
         currentTick++;
         runs++;
     }
