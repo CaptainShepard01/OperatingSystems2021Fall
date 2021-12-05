@@ -1,6 +1,6 @@
 package com.company.lab3;
 
-public class TimeTracking {
+public class PerformanceMeasurer {
     public static void main(String[] args) {
         MemoryManagement.main(new String[]{"src/com/company/lab3/commandsFIFO", "src/com/company/lab3/memoryFIFO.conf", "false"});
         MemoryManagement.runSimulation();
