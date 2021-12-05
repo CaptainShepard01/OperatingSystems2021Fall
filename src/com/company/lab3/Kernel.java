@@ -32,6 +32,7 @@ public class Kernel extends Thread {
     public static byte addressradix = 10;
 
     private int sleepTime = 500;
+    private int clockTick = 2;
 
     public Kernel(boolean isAgingAlgorithm) {
         this.isAgingAlgorithm = isAgingAlgorithm;
@@ -101,6 +102,13 @@ public class Kernel extends Thread {
                         while (st.hasMoreTokens()) {
                             st.nextToken();
                             sleepTime = Common.s2i(st.nextToken());
+                        }
+                    }
+                    if (line.startsWith("clocktick")) {
+                        StringTokenizer st = new StringTokenizer(line);
+                        while (st.hasMoreTokens()) {
+                            st.nextToken();
+                            clockTick = Common.s2i(st.nextToken());
                         }
                     }
                 }
@@ -298,21 +306,21 @@ public class Kernel extends Thread {
         }
 
         //not sure if it is a great practice to map virtual pages in count of physical from the start
-        /*if (map_count < physicalPageNum) {
-            for (i = 0; i < virtPageNum; i++) {
+        if (map_count < physicalPageNumber) {
+            for (i = 0; i < virtualPageNumber; i++) {
                 Page page = (Page) memVector.elementAt(i);
-                if (page.physical == -1 && map_count < physicalPageNum) {
-                    for(int k = 0;k<(virtPageNum+1)/2;++k){
-                        if(!physicalMapped.contains(k)){
+                if (page.physical == -1 && map_count < physicalPageNumber) {
+                    for (int k = 0; k < physicalPageNumber; ++k) {
+                        if (!physicalMapped.contains(k)) {
                             page.physical = k;
                             physicalMapped.add(k);
-                            map_count++;
+                            controlPanel.addPhysicalPage(page.id, k);
                             break;
                         }
                     }
                 }
             }
-        }*/
+        }
         for (i = 0; i < virtualPageNumber; i++) {
             Page page = (Page) memVector.elementAt(i);
             if (page.physical == -1) {
@@ -395,6 +403,8 @@ public class Kernel extends Thread {
         }
     }
 
+    int currentTick = 0;
+
     public void step() {
         Instruction instruct = (Instruction) instructVector.elementAt(runs);
         controlPanel.instructionValueLabel.setText(instruct.inst);
@@ -405,8 +415,8 @@ public class Kernel extends Thread {
             controlPanel.pageFaultValueLabel.setText("NO");
         }
 
-        Integer previousUsage = (Integer) pageUsageVector.get(numberOfPage);
-        int currentUsage = previousUsage >> 1;
+        Integer currentUsage = (Integer) pageUsageVector.get(numberOfPage);
+
         String instructionString = instruct.inst;
 
         Page page = (Page) memVector.elementAt(numberOfPage);
@@ -431,7 +441,10 @@ public class Kernel extends Thread {
         } else {
             page.lastTouchTime = 0;
 
-            currentUsage += pageUsed;
+            //in order not to add extra 1 highest bit
+            if (currentUsage < pageUsed)
+                currentUsage += pageUsed;
+
             pageUsageVector.set(numberOfPage, currentUsage);
 
             logInstruction(instruct, "okay");
@@ -443,13 +456,21 @@ public class Kernel extends Thread {
 
         for (int i = 0; i < virtualPageNumber; i++) {
             Page otherPage = (Page) memVector.elementAt(i);
-            if (otherPage.R == 1 && otherPage.lastTouchTime == 10) {
-                otherPage.R = 0;
+            if (currentTick == clockTick) {
+                if (otherPage.R == 1 && otherPage.lastTouchTime == 10) {
+                    otherPage.R = 0;
+                }
+                currentUsage = (Integer) pageUsageVector.get(i);
+                currentUsage = currentUsage >> 1;
             }
             if (otherPage.physical != -1) {
                 otherPage.inMemTime = otherPage.inMemTime + 10;
                 otherPage.lastTouchTime = otherPage.lastTouchTime + 10;
             }
+        }
+
+        if (currentTick == clockTick) {
+            currentTick = 0;
         }
 
         controlPanel.timeValueLabel.setText(runs * 10 + " (ns)");
