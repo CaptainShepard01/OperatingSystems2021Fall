@@ -9,7 +9,7 @@ public class Kernel extends Thread {
     private static int virtualPageNumber = 64;
     private static int physicalPageNumber = 32;
 
-    private boolean isAgingAlgorithm;
+    private final boolean isAgingAlgorithm;
 
     private String output = null;
     private int pageFaultCount = 0;
@@ -18,12 +18,12 @@ public class Kernel extends Thread {
     private String command_file;
     private String config_file;
     private ControlPanel controlPanel;
-    private Vector<Page> memVector = new Vector();
-    private Vector<Instruction> instructVector = new Vector();
+    private final Vector<Page> memVector = new Vector();
+    private final Vector<Instruction> instructVector = new Vector();
     private int numberOfTicks;
-    private Vector<Integer> pageUsageVector = new Vector();
+    private final Vector<Integer> pageUsageVector = new Vector();
     private int pageUsed;
-    private Set<Integer> physicalMapped = new HashSet<>();
+    private final Set<Integer> physicalMapped = new HashSet<>();
     private boolean doStdoutLog = false;
     private boolean doFileLog = false;
     public int runs;
@@ -165,7 +165,7 @@ public class Kernel extends Thread {
                                 System.out.println("MemoryManagement: Invalid lastTouchTime in " + config);
                                 System.exit(-1);
                             }
-                            Page page = (Page) memVector.elementAt(id);
+                            Page page = memVector.elementAt(id);
                             if (R != 0 || M != 0) {
                                 pageUsageVector.set(id, Integer.parseInt("0".repeat(numberOfTicks), 2));
                             }
@@ -216,7 +216,7 @@ public class Kernel extends Thread {
                             System.exit(-1);
                         }
                         for (i = 0; i < virtualPageNumber; i++) {
-                            Page page = (Page) memVector.elementAt(i);
+                            Page page = memVector.elementAt(i);
                             page.high = (block * (i + 1)) - 1;
                             page.low = block * i;
                         }
@@ -287,13 +287,13 @@ public class Kernel extends Thread {
         }
         runs = 0;
         for (i = 0; i < virtualPageNumber; i++) {
-            Page page = (Page) memVector.elementAt(i);
+            Page page = memVector.elementAt(i);
             if (page.physical != -1) {
                 map_count++;
                 physicalMapped.add(page.physical);
             }
             for (j = 0; j < virtualPageNumber; j++) {
-                Page tmp_page = (Page) memVector.elementAt(j);
+                Page tmp_page = memVector.elementAt(j);
                 if (tmp_page.physical == page.physical && page.physical >= 0) {
                     physical_count++;
                 }
@@ -308,7 +308,7 @@ public class Kernel extends Thread {
         //not sure if it is a great practice to map virtual pages in count of physical from the start
         if (map_count < physicalPageNumber) {
             for (i = 0; i < virtualPageNumber; i++) {
-                Page page = (Page) memVector.elementAt(i);
+                Page page = memVector.elementAt(i);
                 if (page.physical == -1 && map_count < physicalPageNumber) {
                     for (int k = 0; k < physicalPageNumber; ++k) {
                         if (!physicalMapped.contains(k)) {
@@ -322,7 +322,7 @@ public class Kernel extends Thread {
             }
         }
         for (i = 0; i < virtualPageNumber; i++) {
-            Page page = (Page) memVector.elementAt(i);
+            Page page = memVector.elementAt(i);
             if (page.physical == -1) {
                 controlPanel.removePhysicalPage(i);
             } else {
@@ -330,7 +330,7 @@ public class Kernel extends Thread {
             }
         }
         for (i = 0; i < instructVector.size(); i++) {
-            Instruction instruct = (Instruction) instructVector.elementAt(i);
+            Instruction instruct = instructVector.elementAt(i);
             if (instruct.addr < 0 || instruct.addr > address_limit) {
                 System.out.println("MemoryManagement: Instruction (" + instruct.inst + " " + instruct.addr + ") out of bounds.");
                 System.exit(-1);
@@ -343,7 +343,7 @@ public class Kernel extends Thread {
     }
 
     public void getPage(int pageNum) {
-        Page page = (Page) memVector.elementAt(pageNum);
+        Page page = memVector.elementAt(pageNum);
         controlPanel.paintPage(page);
     }
 
@@ -406,7 +406,7 @@ public class Kernel extends Thread {
     int currentTick = 0;
 
     public void step() {
-        Instruction instruct = (Instruction) instructVector.elementAt(runs);
+        Instruction instruct = instructVector.elementAt(runs);
         controlPanel.instructionValueLabel.setText(instruct.inst);
         controlPanel.addressValueLabel.setText(Long.toString(instruct.addr, addressradix));
         int numberOfPage = Address2Page.pageNum(instruct.addr, virtualPageNumber, block);
@@ -415,15 +415,15 @@ public class Kernel extends Thread {
             controlPanel.pageFaultValueLabel.setText("NO");
         }
 
-        Integer currentUsage = (Integer) pageUsageVector.get(numberOfPage);
+        Integer currentUsage = pageUsageVector.get(numberOfPage);
 
         String instructionString = instruct.inst;
 
-        Page page = (Page) memVector.elementAt(numberOfPage);
+        Page page = memVector.elementAt(numberOfPage);
 
         if (page.physical == -1) {
             if (physicalMapped.size() == physicalPageNumber) {
-                replacePage(page.id);
+                replacePage(numberOfPage);
                 controlPanel.pageFaultValueLabel.setText("YES");
 
             } else {
@@ -441,27 +441,30 @@ public class Kernel extends Thread {
         } else {
             page.lastTouchTime = 0;
 
-            //in order not to add extra 1 highest bit
-            if (currentUsage < pageUsed)
-                currentUsage += pageUsed;
-
-            pageUsageVector.set(numberOfPage, currentUsage);
 
             logInstruction(instruct, "okay");
         }
 
+        //in order not to add extra 1 highest bit
+        if (currentUsage < pageUsed) {
+            currentUsage += pageUsed;
+            pageUsageVector.set(numberOfPage, currentUsage);
+        }
+
         page.R = 1;
-        if (instructionString.startsWith("WRITE"))
+        if (instructionString.startsWith("WRITE")) {
             page.M = 1;
+        }
 
         for (int i = 0; i < virtualPageNumber; i++) {
-            Page otherPage = (Page) memVector.elementAt(i);
+            Page otherPage = memVector.elementAt(i);
             if (currentTick == clockTick) {
                 if (otherPage.R == 1 && otherPage.lastTouchTime == 10) {
                     otherPage.R = 0;
                 }
-                currentUsage = (Integer) pageUsageVector.get(i);
+                currentUsage = pageUsageVector.get(i);
                 currentUsage = currentUsage >> 1;
+                pageUsageVector.set(i, currentUsage);
             }
             if (otherPage.physical != -1) {
                 otherPage.inMemTime = otherPage.inMemTime + 10;
