@@ -15,8 +15,8 @@ public class Kernel extends Thread {
     private int pageFaultCount = 0;
     private static final String lineSeparator =
             System.getProperty("line.separator");
-    private String command_file;
-    private String config_file;
+    private String commandFile;
+    private String configFile;
     private ControlPanel controlPanel;
     private final Vector<Page> memVector = new Vector();
     private final Vector<Instruction> instructVector = new Vector();
@@ -38,10 +38,18 @@ public class Kernel extends Thread {
         this.isAgingAlgorithm = isAgingAlgorithm;
     }
 
+    public Vector<Integer> getPageUsageVector() {
+        return pageUsageVector;
+    }
+
+    public int getNumberOfTicks() {
+        return numberOfTicks;
+    }
+
     public void init(String commands, String config) {
         File f;
-        command_file = commands;
-        config_file = config;
+        commandFile = commands;
+        configFile = config;
         String line;
         String tmp = null;
         String command = "";
@@ -410,7 +418,7 @@ public class Kernel extends Thread {
         controlPanel.instructionValueLabel.setText(instruct.inst);
         controlPanel.addressValueLabel.setText(Long.toString(instruct.addr, addressradix));
         int numberOfPage = Address2Page.pageNum(instruct.addr, virtualPageNumber, block);
-        getPage(numberOfPage);
+//        getPage(numberOfPage);
         if (Objects.equals(controlPanel.pageFaultValueLabel.getText(), "YES")) {
             controlPanel.pageFaultValueLabel.setText("NO");
         }
@@ -456,6 +464,7 @@ public class Kernel extends Thread {
             page.M = 1;
         }
 
+        getPage(numberOfPage);
         for (int i = 0; i < virtualPageNumber; i++) {
             Page otherPage = memVector.elementAt(i);
             if (currentTick == clockTick) {
@@ -477,6 +486,7 @@ public class Kernel extends Thread {
         }
 
         controlPanel.timeValueLabel.setText(runs * 10 + " (ns)");
+        currentTick++;
         runs++;
     }
 
@@ -503,6 +513,6 @@ public class Kernel extends Thread {
         controlPanel.lastTouchTimeValueLabel.setText("0");
         controlPanel.lowValueLabel.setText("0");
         controlPanel.highValueLabel.setText("0");
-        init(command_file, config_file);
+        init(commandFile, configFile);
     }
 }

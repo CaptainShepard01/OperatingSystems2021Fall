@@ -41,6 +41,7 @@ public class ControlPanel extends Frame {
     Label lastTouchTimeValueLabel = new Label("0", Label.LEFT);
     Label lowValueLabel = new Label("0", Label.LEFT);
     Label highValueLabel = new Label("0", Label.LEFT);
+    Label pageUsageLabel = new Label("0", Label.LEFT);
 
     public ControlPanel() {
         super();
@@ -55,11 +56,7 @@ public class ControlPanel extends Frame {
     private void reshapeButton(int i, int columnNumber) {
         Button currentButton = buttons.get(i);
 
-        if (columnNumber == 1) {
-            currentButton.reshape(0, (i + 2) * 15 + 25, 70, 15);
-        } else if (columnNumber == 2) {
-            currentButton.reshape(140, (i - 30) * 15 + 25, 70, 15);
-        }
+        currentButton.reshape(140 * (columnNumber - 1), (i - 32 * (columnNumber - 1) + 2) * 15 + 25, 70, 15);
 
         currentButton.setForeground(Color.magenta);
         currentButton.setBackground(Color.lightGray);
@@ -69,11 +66,7 @@ public class ControlPanel extends Frame {
     private void reshapeLabel(int i, int columnNumber) {
         Label currentLabel = labels.get(i);
 
-        if (columnNumber == 1) {
-            currentLabel.reshape(70, (i + 2) * 15 + 25, 60, 15);
-        } else if (columnNumber == 2) {
-            currentLabel.reshape(210, (i - 30) * 15 + 25, 60, 15);
-        }
+        currentLabel.reshape(70 + (columnNumber - 1) * 140, (i - 32 * (columnNumber - 1) + 2) * 15 + 25, 60, 15);
 
         currentLabel.setForeground(Color.red);
         currentLabel.setFont(new Font("Courier", 0, 10));
@@ -162,6 +155,9 @@ public class ControlPanel extends Frame {
         highValueLabel.reshape(395, 225 + 25, 230, 15);
         add(highValueLabel);
 
+        pageUsageLabel.reshape(395, 240 + 25, 230, 15);
+        add(pageUsageLabel);
+
         Label virtualOneLabel = new Label("virtual", Label.CENTER);
         virtualOneLabel.reshape(0, 15 + 25, 70, 15);
         add(virtualOneLabel);
@@ -230,9 +226,25 @@ public class ControlPanel extends Frame {
         highLabel.reshape(285, 225 + 25, 110, 15);
         add(highLabel);
 
+        Label usageLabel = new Label("page usage: ", Label.LEFT);
+        usageLabel.reshape(285, 240 + 25, 110, 15);
+        add(usageLabel);
+
         kernel.init(commands, config);
 
         show();
+    }
+
+    private String generateUsageLabelText(Integer id) {
+        Integer pageUsage = kernel.getPageUsageVector().elementAt(id);
+        String labelText = "";
+        if (pageUsage == 0) {
+            labelText = "0".repeat(kernel.getNumberOfTicks());
+        } else {
+            String dataString = Integer.toString(pageUsage, 2);
+            labelText = "0".repeat(kernel.getNumberOfTicks() - dataString.length()) + dataString;
+        }
+        return labelText;
     }
 
     public void paintPage(Page page) {
@@ -244,6 +256,8 @@ public class ControlPanel extends Frame {
         lastTouchTimeValueLabel.setText(Integer.toString(page.lastTouchTime));
         lowValueLabel.setText(Long.toString(page.low, Kernel.addressradix));
         highValueLabel.setText(Long.toString(page.high, Kernel.addressradix));
+
+        pageUsageLabel.setText(generateUsageLabelText(page.id));
     }
 
     public void setStatus(String status) {

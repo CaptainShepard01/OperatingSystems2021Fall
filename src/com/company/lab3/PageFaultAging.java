@@ -58,14 +58,14 @@ public class PageFaultAging {
         for (int i = 0; i < pageUsage.size(); ++i) {
             Page page = (Page) mem.elementAt(i);
             if (page.physical != -1) {
-                if (page.R != 1) {
+                if (page.M != 1) {
                     int currentLeastUsage = (Integer) pageUsage.get(i);
                     if (currentLeastUsage < leastUsage) {
                         leastUsage = currentLeastUsage;
                         LRUPage = i;
                     }
                 } else {
-                    page.R = 0;
+                    page.M = 0;
                 }
             }
         }

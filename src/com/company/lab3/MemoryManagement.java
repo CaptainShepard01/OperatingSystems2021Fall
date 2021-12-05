@@ -36,8 +36,9 @@ public class MemoryManagement {
             }
         }
 
-        kernel = new Kernel(Boolean.parseBoolean(args[2]));
-        controlPanel = new ControlPanel("Memory Management");
+        boolean isAgingAlgorithm = Boolean.parseBoolean(args[2]);
+        kernel = new Kernel(isAgingAlgorithm);
+        controlPanel = new ControlPanel(isAgingAlgorithm?"Aging algorithm":"FIFO algorithm");
         if (args.length == 1) {
             controlPanel.init(kernel, args[0], null);
         } else {
